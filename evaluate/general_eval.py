@@ -1,7 +1,7 @@
 import os
 import json
 import datetime
-os.environ['HF_HOME'] = '/gz-data/hf-cache/'
+# os.environ['HF_HOME'] = '/gz-data/hf-cache/'
 # from qwen_generation_utils import decode_tokens
 import torch
 import datasets

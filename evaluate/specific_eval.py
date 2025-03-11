@@ -1,6 +1,22 @@
 import json
 import os
+from openai import OpenAI, AsyncOpenAI
+from dotenv import load_dotenv
+load_dotenv()
 
+
+local_client = OpenAI(
+    api_key="EMPTY",
+    base_url="http://localhost:8000/v1"
+)
+
+remote_client = OpenAI(
+    api_key=os.environ["OPENAI_API_KEY"],
+    base_url=os.environ['OPENAI_API_BASE_URL']
+)
+
+# 评估: 生成的时候需要区分 chat 模型和 completion 模型，但实际中使用的都是 chat 模型
+# 现在应该考虑的是用 Qwen2.5-0.5B-Instruct 和 Llama3.2-0.5B-Instruct 两个模型
 
 def read_json_files(folder_path):
     """
@@ -99,21 +115,17 @@ def model_reply(history):
     '''
     """
     messages = [{"role": "user", "content": user_message}]
+    response = local_client.completions.create(
+        model = 'gpt-4-turbo',
+        messages = messages,
+        temperature = 0.0,
+    )
+    reply = response.choices[0].message["content"]
     # 返回生成的回复
     return reply 
 
 
-# 默认评价函数(默认GPT-4-Turbo，可按需更换模型)
-# 用户需要创建.env文件，并在其中添加OPENAI_API_KEY = ""
 # 返回内容需按照规定格式返回评分, 例如"[2,2,3,3]" (已在prompt中限定)
-import os
-import openai
-from dotenv import load_dotenv
-
-load_dotenv()
-openai.api_key = os.environ["OPENAI_API_KEY"]
-openai.base_url = os.environ['OPENAI_API_BASE_URL']
-
 def evaluate_reply(history, reply):
     # GPT-4评价模型
     
@@ -176,7 +188,7 @@ def evaluate_reply(history, reply):
         {"role": "system", "content":system_message},
         {"role": "user", "content": reply},
 ]
-    response = openai.ChatCompletion.create(
+    response = remote_client.chat.completions.create(
         model = 'gpt-4-turbo',
         messages = messages,
         temperature = 0.0,
