@@ -11,7 +11,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, DataCollatorWithPa
 from tqdm import tqdm
 
 # load model and tokenizer
-model_path = 'Qwen/Qwen2.5-0.5B-Instruct'
+# model_path = 'Qwen/Qwen2.5-0.5B-Instruct'
+model_path = 'Qwen/Qwen2.5-0.5B'
 model_name = model_path.split('/')[-1]
 
 tokenizer = AutoTokenizer.from_pretrained(
@@ -59,8 +60,9 @@ for batch in tqdm(dataloader):
         attention_mask=attention_mask,
         return_dict_in_generate=False,
         max_new_tokens=256,
-        temperature=0.1,
-        # pad_token_id=tokenizer.eos_token_id
+        do_sample=True,
+        temperature=0.,
+        pad_token_id=tokenizer.eos_token_id
     )
 
     response = tokenizer.decode(
