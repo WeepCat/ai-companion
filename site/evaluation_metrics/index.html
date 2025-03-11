@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Evaluation Metrics</title>
+    <link rel="stylesheet" href="../styles/table.css" />
+    <style>
+      .sort-header {
+        cursor: pointer;
+        position: relative;
+        user-select: none;
+      }
+
+      .sort-header:after {
+        content: "⇅";
+        font-size: 0.8em;
+        margin-left: 5px;
+        opacity: 0.5;
+      }
+
+      .sort-header.asc:after {
+        content: "▲";
+        opacity: 1;
+      }
+
+      .sort-header.desc:after {
+        content: "▼";
+        opacity: 1;
+      }
+
+      .sort-controls {
+        margin-bottom: 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Model Evaluation Metrics</h1>
+    <div class="sort-controls">
+      <label>Sort by: </label>
+      <select id="sort-select">
+        <option value="model_name">Model Name</option>
+        <option value="timestamp">Date</option>
+        <option value="rouge-1">ROUGE-1</option>
+        <option value="rouge-2">ROUGE-2</option>
+        <option value="rouge-l">ROUGE-L</option>
+        <option value="bleu_1">BLEU-1</option>
+        <option value="bleu_2">BLEU-2</option>
+        <option value="bleu_3">BLEU-3</option>
+        <option value="bleu_4">BLEU-4</option>
+      </select>
+      <label>
+        <input type="radio" name="sort-direction" value="asc" checked />
+        Ascending
+      </label>
+      <label>
+        <input type="radio" name="sort-direction" value="desc" /> Descending
+      </label>
+    </div>
+    <div id="results-container"></div>
+
+    <script>
+      let tableData = [];
+      let currentSort = {
+        column: "model_name",
+        direction: "asc",
+      };
+
+      // Fetch data and initialize
+      fetch("../assets/results.json")
+        .then((response) => response.json())
+        .then((data) => {
+          tableData = data;
+          renderTable();
+          setupSortingControls();
+        })
+        .catch((error) => {
+          console.error("Error fetching metrics:", error);
+          document.getElementById("results-container").innerHTML =
+            "<p>Error loading evaluation results. Please check the console for details.</p>";
+        });
+
+      function setupSortingControls() {
+        const sortSelect = document.getElementById("sort-select");
+        const sortRadios = document.getElementsByName("sort-direction");
+
+        sortSelect.addEventListener("change", function () {
+          currentSort.column = this.value;
+          sortData();
+          renderTable();
+        });
+
+        for (let radio of sortRadios) {
+          radio.addEventListener("change", function () {
+            currentSort.direction = this.value;
+            sortData();
+            renderTable();
+          });
+        }
+
+        // Set initial sort state
+        sortData();
+        renderTable();
+      }
+
+      function sortData() {
+        tableData.sort((a, b) => {
+          let valueA, valueB;
+
+          if (currentSort.column === "model_name") {
+            valueA = a.model_name;
+            valueB = b.model_name;
+          } else if (currentSort.column === "timestamp") {
+            valueA = new Date(a.timestamp);
+            valueB = new Date(b.timestamp);
+          } else if (currentSort.column.startsWith("rouge")) {
+            valueA = a.metrics[currentSort.column] || 0;
+            valueB = b.metrics[currentSort.column] || 0;
+          } else if (currentSort.column.startsWith("bleu")) {
+            valueA = a.metrics.bleu
+              ? a.metrics.bleu[currentSort.column] || 0
+              : 0;
+            valueB = b.metrics.bleu
+              ? b.metrics.bleu[currentSort.column] || 0
+              : 0;
+          }
+
+          if (currentSort.direction === "asc") {
+            return valueA > valueB ? 1 : -1;
+          } else {
+            return valueA < valueB ? -1 : 1;
+          }
+        });
+      }
+
+      function renderTable() {
+        const container = document.getElementById("results-container");
+        container.innerHTML = "";
+
+        // Create table
+        const table = document.createElement("table");
+
+        // Create header row
+        const headerRow = document.createElement("tr");
+        const headers = [
+          { display: "Model Name", value: "model_name" },
+          { display: "Date", value: "timestamp" },
+          { display: "ROUGE-1", value: "rouge-1" },
+          { display: "ROUGE-2", value: "rouge-2" },
+          { display: "ROUGE-L", value: "rouge-l" },
+          { display: "BLEU-1", value: "bleu_1" },
+          { display: "BLEU-2", value: "bleu_2" },
+          { display: "BLEU-3", value: "bleu_3" },
+          { display: "BLEU-4", value: "bleu_4" },
+        ];
+
+        headers.forEach((header) => {
+          const th = document.createElement("th");
+          th.textContent = header.display;
+          th.classList.add("sort-header");
+
+          if (currentSort.column === header.value) {
+            th.classList.add(currentSort.direction);
+          }
+
+          th.addEventListener("click", function () {
+            if (currentSort.column === header.value) {
+              // Toggle direction if clicking the same header
+              currentSort.direction =
+                currentSort.direction === "asc" ? "desc" : "asc";
+            } else {
+              // Set new sort column
+              currentSort.column = header.value;
+            }
+
+            // Update UI controls to match current sort
+            document.getElementById("sort-select").value = currentSort.column;
+            const radioToSelect = document.querySelector(
+              `input[name="sort-direction"][value="${currentSort.direction}"]`
+            );
+            if (radioToSelect) radioToSelect.checked = true;
+
+            sortData();
+            renderTable();
+          });
+
+          headerRow.appendChild(th);
+        });
+
+        table.appendChild(headerRow);
+
+        // Process each result
+        tableData.forEach((item) => {
+          const row = document.createElement("tr");
+
+          // Model name
+          const modelCell = document.createElement("td");
+          modelCell.textContent = item.model_name;
+          row.appendChild(modelCell);
+
+          // Date
+          const dateCell = document.createElement("td");
+          dateCell.textContent = item.timestamp;
+          row.appendChild(dateCell);
+
+          // ROUGE scores
+          const metrics = item.metrics;
+          const rougeScores = ["rouge-1", "rouge-2", "rouge-l"];
+
+          rougeScores.forEach((score) => {
+            const cell = document.createElement("td");
+            cell.textContent = metrics[score]
+              ? metrics[score].toFixed(2)
+              : "N/A";
+            row.appendChild(cell);
+          });
+
+          // BLEU scores
+          const bleuScores = ["bleu_1", "bleu_2", "bleu_3", "bleu_4"];
+
+          bleuScores.forEach((score) => {
+            const cell = document.createElement("td");
+            cell.textContent =
+              metrics.bleu && metrics.bleu[score]
+                ? metrics.bleu[score].toFixed(2)
+                : "N/A";
+            row.appendChild(cell);
+          });
+
+          table.appendChild(row);
+        });
+
+        container.appendChild(table);
+      }
+    </script>
+  </body>
+</html>

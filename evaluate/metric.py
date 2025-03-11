@@ -16,17 +16,23 @@ def compute_metrics(eval_pred):
     decoded_labels = [" ".join(jieba.cut(label.replace(" ", ""))) for label in labels]
     rouge = Rouge()
 
-    bleu =np.array([0.,0.,0.,0.])
-    weights = [(1.,0.,0.,0.),(1./2., 1./2.),(1./3., 1./3., 1./3.),(1./4., 1./4., 1./4., 1./4.)]
+    bleu = np.array([0., 0., 0., 0.])
+    weights = [(1., 0., 0., 0.), (1./2., 1./2.), (1./3., 1./3., 1./3.), (1./4., 1./4., 1./4., 1./4.)]
     for decoded_label, decoded_pred in zip(decoded_labels, decoded_preds):
-        bleu +=np.array( sentence_bleu(
+        bleu += np.array(sentence_bleu(
             references=[decoded_label.split(' ')],
             hypothesis=decoded_pred.split(' '),
-            smoothing_function=SmoothingFunction().method1,weights=weights
+            smoothing_function=SmoothingFunction().method1,
+            weights=weights
         ))
         
     bleu /= len(decoded_labels)
     result = rouge.get_scores(decoded_preds, decoded_labels, avg=True)
-    result = {key: value['f'] * 100 for key, value in result.items()}
-    result["bleu"] = {'bleu_1':bleu[0] * 100,'bleu_2':bleu[1] * 100,'bleu_3':bleu[2] * 100,'bleu_4':bleu[3] * 100}
+    result = {key: float(value['f'] * 100) for key, value in result.items()}
+    result["bleu"] = {
+        'bleu_1': float(bleu[0] * 100),
+        'bleu_2': float(bleu[1] * 100),
+        'bleu_3': float(bleu[2] * 100),
+        'bleu_4': float(bleu[3] * 100)
+    }
     return result
