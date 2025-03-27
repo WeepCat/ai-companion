@@ -1,0 +1,13 @@
+Theme: Career
+Reply Model: Qwen/Qwen2.5-7B-Instruct
+Evaluation Model: deepseek-chat
+Round 1, Score: [2, 3, 3, 1]
+Round 2, Score: [2, 3, 3, 1]
+Round 3, Score: [2, 3, 3, 1]
+Round 4, Score: [2, 3, 3, 1]
+Round 5, Score: [2, 3, 2, 1]
+Round 6, Score: [2, 3, 3, 1]
+Round 7, Score: [2, 3, 3, 1]
+Round 8, Score: [2, 3, 3, 1]
+Average Scores: [2.0, 3.0, 2.88, 1.0]
+Valid evaluations: 8/8

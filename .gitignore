@@ -1,0 +1,7 @@
+# 忽略隐藏文件
+.vscode/
+**.pyc
+.env
+.site/
+output/
+**.json
