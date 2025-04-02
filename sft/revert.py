@@ -34,4 +34,4 @@ def convert_json_to_jsonl(json_file, jsonl_file):
             f.write(json.dumps(item, ensure_ascii=False) + '\n')
 # dedup_combined_data.json
 # processed_self_cognition_WeepCat.json
-convert_json_to_jsonl('processed_self_cognition_WeepCat.json','processed_self_cognition_WeepCat.jsonl')
+convert_json_to_jsonl('dedup_combined_data.json','dedup_combined_data.jsonl')
