@@ -1,9 +1,9 @@
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
 from transformers.utils import logging
 
-from data_processing import Data_process
-from config import prompt_template 
+from .data_processing import Data_process
+from .config import prompt_template 
 logger = logging.get_logger(__name__)
 
 
@@ -89,6 +89,17 @@ class EmoLLMRAG(object):
                 }
             )
         return generation
+    
+    def generate_answer(self, conversation) -> str:
+        prompt = ChatPromptTemplate(
+            messages=conversation
+        )
+        rag_chain = prompt | self.model | StrOutputParser()
+
+        generation = rag_chain.invoke({})
+        return generation
+        
+
     
     def main(self, query) -> str:
         """

@@ -4,7 +4,7 @@ import os
 
 from loguru import logger
 from langchain_community.vectorstores import FAISS
-from config import (
+from .config import (
     embedding_path,
     embedding_model_name,
     doc_dir, qa_dir,

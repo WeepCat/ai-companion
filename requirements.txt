@@ -12,7 +12,7 @@ loguru==0.7.3
 matplotlib==3.10.1
 ms_swift==3.2.1
 nltk==3.9.1
-numpy==2.2.4
+numpy==1.26.2
 openai==1.70.0
 PyJWT==2.10.1
 python-dotenv==1.1.0

@@ -49,7 +49,7 @@ def get_aclient():
 
 # 处理流式响应
 @st.cache_resource
-def chat(conversation: str, **kwargs):
+def chat(conversation: List, **kwargs):
     response = client.chat.completions.create(
         model="catllm",
         messages=conversation,
