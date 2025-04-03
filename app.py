@@ -8,9 +8,14 @@ torch.classes.__path__ = []
 os.environ['HF_HOME'] = "/gz-data/hf-cache/"
 os.environ['HF_ENDPOINT'] = "https://hf-mirror.com"
 from transformers.utils import logging  
+from utils.process_conversation import construct_conversation
 logger = logging.get_logger(__name__)
 # model = "weepcat/weepcat-7B-Instruct-sft"
 # os.system(f"vllm serve {model} --dtype auto --served-model-name catllm &")
+# export HF_HOME=/gz-data/hf-cache/
+# export HF_ENDPOINT=https://hf-mirror.com
+# vllm serve weepcat/weepcat-7B-Instruct-sft --dtype auto --served-model-name catllm
+
 
 @dataclass
 class GenerationConfig:
@@ -77,23 +82,7 @@ def prepare_generation_config():
     return generation_config
 
 
-system_prompt = "你是心理健康助手 CatLLM, 由 WeepCat 打造, 是一个研究过无数具有心理健康问题的病人与心理健康医生对话的心理专家, 在心理方面拥有广博的知识储备和丰富的研究咨询经验。你旨在通过专业心理咨询, 协助来访者完成心理诊断。请充分利用专业心理学知识与咨询技术, 一步步帮助来访者解决心理问题。"
 client = get_client()
-
-
-def construct_conversation(prompt: str, messages: List) -> List:
-    conversation = []
-    conversation.append({"role": "system", "content": system_prompt})
-    for message in messages:
-        cur_content = message["content"]
-        if message["role"] == "user":
-            conversation.append({"role": "user", "content": cur_content})
-        elif message["role"] == "robot":
-            conversation.append({"role": "assistant", "content": cur_content})
-        else:
-            raise RuntimeError
-    conversation.append({"role": "user", "content": prompt})
-    return conversation
 
 
 def main():
@@ -113,7 +102,7 @@ def main():
         with st.chat_message("user", avatar=user_avator):
             st.markdown(prompt)
         st.session_state.messages.append({"role": "user", "content": prompt, "avatar": user_avator})
-        conversation = construct_conversation(prompt, st.session_state.messages)
+        conversation = construct_conversation(prompt, st.session_state.messages, max_tokens=8192)
         with st.chat_message("robot", avatar=robot_avator):
             message_placeholder = st.empty()
             for cur_response in chat(conversation=conversation, **asdict(generation_config)):
